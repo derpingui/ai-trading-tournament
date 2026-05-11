@@ -148,6 +148,7 @@
   }
 
   .agent-card:hover { border-color: var(--border2); transform: translateY(-2px); }
+  .agent-card { cursor: pointer; }
 
   .agent-card::before {
     content: '';
@@ -494,6 +495,236 @@
   /* ── DIVIDER ── */
   .divider { width: 1px; height: 14px; background: var(--border); }
 
+  /* ── DETAIL DRAWER ── */
+  .drawer-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.6);
+    backdrop-filter: blur(4px);
+    z-index: 200;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.25s ease;
+  }
+  .drawer-overlay.open { opacity: 1; pointer-events: all; }
+
+  .drawer {
+    position: fixed;
+    top: 0; right: 0; bottom: 0;
+    width: 480px;
+    max-width: 100vw;
+    background: var(--bg2);
+    border-left: 1px solid var(--border2);
+    z-index: 201;
+    display: flex;
+    flex-direction: column;
+    transform: translateX(100%);
+    transition: transform 0.3s cubic-bezier(0.32, 0.72, 0, 1);
+    overflow: hidden;
+  }
+  .drawer.open { transform: translateX(0); }
+
+  .drawer-header {
+    padding: 22px 24px 18px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: flex-start;
+    gap: 14px;
+    flex-shrink: 0;
+  }
+
+  .drawer-agent-icon {
+    width: 44px; height: 44px;
+    border-radius: 12px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 20px;
+    flex-shrink: 0;
+  }
+
+  .drawer-agent-info { flex: 1; min-width: 0; }
+  .drawer-agent-name { font-size: 18px; font-weight: 800; letter-spacing: -0.4px; }
+  .drawer-agent-model { font-size: 11px; color: var(--muted); margin-top: 2px; }
+
+  .drawer-close {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    color: var(--muted);
+    width: 32px; height: 32px;
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+    transition: all 0.15s;
+  }
+  .drawer-close:hover { background: var(--surface); color: var(--text); }
+
+  .drawer-body {
+    flex: 1;
+    overflow-y: auto;
+    padding: 20px 24px;
+    scrollbar-width: thin;
+    scrollbar-color: var(--surface2) transparent;
+  }
+
+  .drawer-section { margin-bottom: 24px; }
+
+  .drawer-section-title {
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--muted);
+    margin-bottom: 12px;
+  }
+
+  /* Stats row */
+  .stat-row {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+    margin-bottom: 10px;
+  }
+
+  .stat-box {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 12px 14px;
+  }
+
+  .stat-box-label { font-size: 10px; color: var(--muted); margin-bottom: 4px; }
+  .stat-box-val   { font-size: 16px; font-weight: 700; letter-spacing: -0.4px; }
+
+  /* Allocation bar */
+  .alloc-bar-wrap {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 14px;
+  }
+
+  .alloc-bar-labels {
+    display: flex;
+    justify-content: space-between;
+    font-size: 11px;
+    color: var(--muted);
+    margin-bottom: 8px;
+  }
+
+  .alloc-bar {
+    height: 8px;
+    border-radius: 4px;
+    background: var(--surface2);
+    overflow: hidden;
+    display: flex;
+  }
+
+  .alloc-bar-cash   { background: var(--accent); border-radius: 4px 0 0 4px; transition: width 0.4s ease; }
+  .alloc-bar-equity { background: var(--green);  border-radius: 0 4px 4px 0; transition: width 0.4s ease; }
+
+  .alloc-legend {
+    display: flex;
+    gap: 14px;
+    margin-top: 8px;
+  }
+
+  .alloc-legend-item {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 11px;
+    color: var(--muted);
+  }
+
+  .alloc-legend-dot { width: 8px; height: 8px; border-radius: 50%; }
+
+  /* Positions in drawer */
+  .drawer-pos-table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+
+  .drawer-pos-table th {
+    font-size: 10px;
+    font-weight: 600;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+    padding: 0 0 8px;
+    text-align: left;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .drawer-pos-table th:last-child,
+  .drawer-pos-table td:last-child { text-align: right; }
+
+  .drawer-pos-table td {
+    padding: 10px 0;
+    font-size: 12px;
+    border-bottom: 1px solid rgba(255,255,255,0.03);
+  }
+
+  .drawer-pos-table tr:last-child td { border-bottom: none; }
+
+  .pos-sym { font-weight: 700; font-size: 13px; }
+  .pos-change { font-size: 10px; }
+
+  /* Drawer trade history */
+  .drawer-trade {
+    padding: 10px 12px;
+    border-radius: 8px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    margin-bottom: 7px;
+  }
+
+  .drawer-trade-top {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-bottom: 4px;
+  }
+
+  .drawer-trade-sym  { font-weight: 700; font-size: 13px; }
+  .drawer-trade-qty  { font-size: 11px; color: var(--muted); }
+  .drawer-trade-time { font-size: 10px; color: var(--muted); margin-left: auto; }
+
+  .drawer-trade-reason {
+    font-size: 11px;
+    color: var(--muted);
+    line-height: 1.45;
+    padding-left: 10px;
+    border-left: 2px solid var(--border2);
+    margin-top: 4px;
+  }
+
+  /* Analysis bubble */
+  .analysis-bubble {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 12px 14px;
+    font-size: 12px;
+    color: var(--muted);
+    line-height: 1.55;
+    margin-bottom: 8px;
+    position: relative;
+  }
+
+  .analysis-ts {
+    font-size: 10px;
+    color: var(--muted);
+    opacity: 0.6;
+    margin-top: 6px;
+  }
+
+  .drawer-empty {
+    text-align: center;
+    color: var(--muted);
+    font-size: 12px;
+    padding: 20px 0;
+  }
+
   /* ── SPINNER ── */
   .spinner {
     width: 14px; height: 14px;
@@ -673,6 +904,105 @@
 
 </div>
 
+<!-- DETAIL DRAWER -->
+<div class="drawer-overlay" id="drawerOverlay" onclick="closeDrawer()"></div>
+<div class="drawer" id="drawer">
+  <div class="drawer-header">
+    <div class="drawer-agent-icon" id="drawerIcon"></div>
+    <div class="drawer-agent-info">
+      <div class="drawer-agent-name" id="drawerName">—</div>
+      <div class="drawer-agent-model" id="drawerModel">—</div>
+    </div>
+    <button class="drawer-close" onclick="closeDrawer()">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+    </button>
+  </div>
+
+  <div class="drawer-body">
+
+    <!-- Stats -->
+    <div class="drawer-section">
+      <div class="drawer-section-title">Portfolio Overview</div>
+      <div class="stat-row">
+        <div class="stat-box">
+          <div class="stat-box-label">Total Value</div>
+          <div class="stat-box-val" id="dTotal">—</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-box-label">Return</div>
+          <div class="stat-box-val" id="dReturn">—</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-box-label">Trades</div>
+          <div class="stat-box-val" id="dTrades">—</div>
+        </div>
+      </div>
+      <div class="stat-row">
+        <div class="stat-box">
+          <div class="stat-box-label">Cash</div>
+          <div class="stat-box-val" id="dCash">—</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-box-label">Equity</div>
+          <div class="stat-box-val" id="dEquity">—</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-box-label">Fees Paid</div>
+          <div class="stat-box-val" id="dFees">—</div>
+        </div>
+      </div>
+
+      <!-- Allocation bar -->
+      <div class="alloc-bar-wrap" style="margin-top:10px">
+        <div class="alloc-bar-labels">
+          <span>Portfolio Allocation</span>
+          <span id="dAllocPct">—</span>
+        </div>
+        <div class="alloc-bar">
+          <div class="alloc-bar-cash"   id="dBarCash"   style="width:50%"></div>
+          <div class="alloc-bar-equity" id="dBarEquity" style="width:50%"></div>
+        </div>
+        <div class="alloc-legend">
+          <div class="alloc-legend-item"><div class="alloc-legend-dot" style="background:var(--accent)"></div>Cash</div>
+          <div class="alloc-legend-item"><div class="alloc-legend-dot" style="background:var(--green)"></div>Equity</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Positions -->
+    <div class="drawer-section">
+      <div class="drawer-section-title">Open Positions</div>
+      <table class="drawer-pos-table">
+        <thead>
+          <tr>
+            <th>Symbol</th>
+            <th>Qty</th>
+            <th>Avg Cost</th>
+            <th>Price</th>
+            <th>P&amp;L</th>
+          </tr>
+        </thead>
+        <tbody id="dPositions">
+          <tr><td colspan="5" class="drawer-empty">No open positions</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Latest Analysis -->
+    <div class="drawer-section">
+      <div class="drawer-section-title">Recent Analysis</div>
+      <div id="dAnalysis"><div class="drawer-empty">No analysis yet</div></div>
+    </div>
+
+    <!-- Trade History -->
+    <div class="drawer-section">
+      <div class="drawer-section-title">Trade History</div>
+      <div id="dHistory"><div class="drawer-empty">No trades yet</div></div>
+    </div>
+
+  </div>
+</div>
+
 <script>
 // ── Config ──────────────────────────────────────────────────────────────────
 const API    = '';   // same origin — FastAPI serves both API and frontend
@@ -758,6 +1088,7 @@ function renderCards(data) {
         </div>
       </div>`;
 
+    card.onclick = () => openDrawer(a.agent_id);
     row.appendChild(card);
   });
 }
@@ -1040,6 +1371,130 @@ async function get(path) {
 }
 
 document.addEventListener('DOMContentLoaded', boot);
+
+// ── Detail Drawer ─────────────────────────────────────────────────────────────
+
+let drawerAgentId = null;
+
+function openDrawer(agentId) {
+  drawerAgentId = agentId;
+  const agent = agents.find(a => a.id === agentId);
+  if (!agent) return;
+
+  // Header
+  document.getElementById('drawerIcon').style.background = agent.color + '22';
+  document.getElementById('drawerIcon').style.border = `1px solid ${agent.color}44`;
+  document.getElementById('drawerIcon').textContent = agentEmoji(agent.name);
+  document.getElementById('drawerName').textContent = agent.name;
+  document.getElementById('drawerModel').textContent = agent.model_id;
+
+  document.getElementById('drawer').classList.add('open');
+  document.getElementById('drawerOverlay').classList.add('open');
+  document.body.style.overflow = 'hidden';
+
+  loadDrawerData(agentId, agent);
+}
+
+function closeDrawer() {
+  document.getElementById('drawer').classList.remove('open');
+  document.getElementById('drawerOverlay').classList.remove('open');
+  document.body.style.overflow = '';
+  drawerAgentId = null;
+}
+
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closeDrawer(); });
+
+async function loadDrawerData(agentId, agent) {
+  const [snap, trades, analysis] = await Promise.all([
+    get(`/portfolio/${agentId}`).catch(() => null),
+    get(`/trades/${agentId}?limit=20`).catch(() => []),
+    get(`/analysis/${agentId}?limit=3`).catch(() => []),
+  ]);
+
+  if (snap) {
+    const total = snap.total_value;
+    const ret   = snap.return_pct;
+    const retCls = ret >= 0 ? 'pos' : 'neg';
+    const sign   = ret >= 0 ? '+' : '';
+    const cashPct   = snap.total_value > 0 ? (snap.cash / snap.total_value * 100) : 100;
+    const equityPct = 100 - cashPct;
+
+    document.getElementById('dTotal').textContent  = '$' + total.toLocaleString('en-US', {minimumFractionDigits:2});
+    document.getElementById('dReturn').innerHTML   = `<span class="${retCls}">${sign}${ret.toFixed(2)}%</span>`;
+    document.getElementById('dCash').textContent   = '$' + snap.cash.toLocaleString('en-US', {minimumFractionDigits:0, maximumFractionDigits:0});
+    document.getElementById('dEquity').textContent = '$' + snap.equity.toLocaleString('en-US', {minimumFractionDigits:0, maximumFractionDigits:0});
+    document.getElementById('dAllocPct').textContent = `${equityPct.toFixed(0)}% invested`;
+    document.getElementById('dBarCash').style.width   = cashPct + '%';
+    document.getElementById('dBarEquity').style.width = equityPct + '%';
+
+    // fees = trades × $1
+    document.getElementById('dFees').textContent = '$' + (trades.length * 1).toFixed(2);
+    document.getElementById('dTrades').textContent = trades.length;
+
+    // Positions
+    const tbody = document.getElementById('dPositions');
+    if (!snap.positions.length) {
+      tbody.innerHTML = '<tr><td colspan="5" class="drawer-empty">No open positions — holding cash</td></tr>';
+    } else {
+      tbody.innerHTML = snap.positions.map(p => {
+        const pnl    = p.unrealized_pnl;
+        const cls    = pnl >= 0 ? 'pos' : 'neg';
+        const sign   = pnl >= 0 ? '+' : '';
+        const chgCls = p.change_pct >= 0 ? 'pos' : 'neg';
+        const chgSign = p.change_pct >= 0 ? '+' : '';
+        return `<tr>
+          <td>
+            <div class="pos-sym">${p.symbol}</div>
+            <div class="pos-change ${chgCls}" style="font-size:10px">${chgSign}${p.change_pct?.toFixed(2) ?? 0}% today</div>
+          </td>
+          <td class="num">${Math.round(p.quantity)}</td>
+          <td class="num">$${p.avg_cost.toFixed(2)}</td>
+          <td class="num">$${p.current_price.toFixed(2)}</td>
+          <td class="num ${cls}">${sign}$${Math.abs(pnl).toFixed(2)}</td>
+        </tr>`;
+      }).join('');
+    }
+  }
+
+  // Analysis
+  const dAnalysis = document.getElementById('dAnalysis');
+  if (!analysis.length) {
+    dAnalysis.innerHTML = '<div class="drawer-empty">No analysis yet — trigger a cycle first</div>';
+  } else {
+    dAnalysis.innerHTML = analysis.map(a => {
+      const ts = new Date(a.timestamp).toLocaleString('en-US', {month:'short', day:'numeric', hour:'2-digit', minute:'2-digit'});
+      return `<div class="analysis-bubble">
+        ${a.market_summary}
+        <div class="analysis-ts">${ts}</div>
+      </div>`;
+    }).join('');
+  }
+
+  // Trade history
+  const dHistory = document.getElementById('dHistory');
+  if (!trades.length) {
+    dHistory.innerHTML = '<div class="drawer-empty">No trades yet</div>';
+  } else {
+    dHistory.innerHTML = trades.map(t => {
+      const ts = new Date(t.timestamp).toLocaleString('en-US', {month:'short', day:'numeric', hour:'2-digit', minute:'2-digit'});
+      const isBuy = t.action === 'buy';
+      return `<div class="drawer-trade">
+        <div class="drawer-trade-top">
+          <span class="trade-pill ${t.action}">${t.action.toUpperCase()}</span>
+          <span class="drawer-trade-sym">${t.symbol}</span>
+          <span class="drawer-trade-qty">${Math.round(t.quantity)} sh @ $${(+t.price).toFixed(2)}</span>
+          <span class="drawer-trade-time">${ts}</span>
+        </div>
+        ${t.reasoning ? `<div class="drawer-trade-reason">${t.reasoning}</div>` : ''}
+      </div>`;
+    }).join('');
+  }
+}
+
+function agentEmoji(name) {
+  const map = { Claude: '🟠', Gemini: '🔵', Llama: '🦙', GPT: '🔴' };
+  return map[name] || '🤖';
+}
 </script>
 </body>
 </html>
