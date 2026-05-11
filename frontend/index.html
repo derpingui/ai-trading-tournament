@@ -736,48 +736,6 @@
   }
   @keyframes spin { to { transform: rotate(360deg); } }
 
-  /* ── NEWS TICKER ── */
-  .ticker {
-    grid-column: 1 / -1;
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 12px;
-    padding: 10px 18px;
-    display: flex;
-    align-items: center;
-    gap: 14px;
-    overflow: hidden;
-  }
-
-  .ticker-label {
-    font-size: 10px;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 1px;
-    color: var(--accent2);
-    white-space: nowrap;
-    flex-shrink: 0;
-  }
-
-  .ticker-track {
-    display: flex;
-    gap: 40px;
-    overflow: hidden;
-    white-space: nowrap;
-    mask-image: linear-gradient(to right, transparent 0%, black 5%, black 95%, transparent 100%);
-  }
-
-  .ticker-text {
-    font-size: 11px;
-    color: var(--muted);
-    animation: ticker 30s linear infinite;
-    white-space: nowrap;
-  }
-
-  @keyframes ticker {
-    from { transform: translateX(0); }
-    to   { transform: translateX(-50%); }
-  }
 </style>
 </head>
 <body>
@@ -893,14 +851,6 @@
     </table>
   </div>
 
-  <!-- NEWS TICKER -->
-  <div class="ticker" id="tickerWrap" style="display:none">
-    <span class="ticker-label">📰 News</span>
-    <div class="ticker-track">
-      <span class="ticker-text" id="tickerText1"></span>
-      <span class="ticker-text" id="tickerText2"></span>
-    </div>
-  </div>
 
 </div>
 
@@ -1310,18 +1260,6 @@ function updateMarketStatus() {
   el.style.color = isOpen ? 'var(--green)' : 'var(--muted)';
 }
 
-// ── News ticker ──────────────────────────────────────────────────────────────
-async function loadNewsTicker() {
-  const analysis = await get('/analysis/3').catch(() => []);
-  if (!analysis.length) return;
-  const text = analysis.map(a => a.market_summary).filter(Boolean).join(' · ');
-  if (!text) return;
-  const doubled = text + ' · ' + text;
-  document.getElementById('tickerText1').textContent = doubled;
-  document.getElementById('tickerText2').textContent = doubled;
-  document.getElementById('tickerWrap').style.display = 'flex';
-}
-
 // ── WebSocket ────────────────────────────────────────────────────────────────
 function connectWS() {
   ws = new WebSocket(WS_URL);
@@ -1359,7 +1297,6 @@ async function triggerAll() {
     btn.disabled = false;
     btn.innerHTML = `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"/></svg> Run Analysis`;
     loadPositions(activeTab);
-    loadNewsTicker();
   }, 3000);
 }
 
