@@ -1,0 +1,24 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(python3 -c \"import yfinance as yf; print\\(yf.__version__\\); import requests; r = requests.get\\('https://query1.finance.yahoo.com/v8/finance/chart/AAPL?interval=1d&range=5d'\\); print\\(r.status_code, r.text[:200]\\)\")",
+      "Bash(python3 market_data.py)",
+      "Bash(pip3 install *)",
+      "Bash(python3 -c \"import pandas_datareader as pdr; df = pdr.get_data_stooq\\('AAPL', start='2026-05-08', end='2026-05-11'\\); print\\(df.head\\(\\)\\)\")",
+      "Bash(python3 -c ' *)",
+      "Bash(python3 news.py)",
+      "Bash(python3 database.py)",
+      "Bash(mkdir -p \"/Users/robbiegroh/Documents/Claude/Claude Code/AI Trading/.claude\")",
+      "mcp__Claude_Preview__preview_start",
+      "Bash(pkill -f \"uvicorn main:app\")",
+      "Bash(curl -s http://localhost:8000/)",
+      "Bash(curl -s http://localhost:8000/leaderboard)",
+      "Bash(python3 -m json.tool)",
+      "Bash(cd \"/Users/robbiegroh/Documents/Claude/Claude Code/AI Trading/backend\" && cat /tmp/trading_server.log 2>/dev/null | tail -20)",
+      "Bash(gh auth *)",
+      "Bash(git --version)",
+      "Bash(git init *)",
+      "Bash(git add *)"
+    ]
+  }
+}

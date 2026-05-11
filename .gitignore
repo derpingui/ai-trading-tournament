@@ -1,0 +1,24 @@
+# Environment & secrets
+.env
+
+# Claude Code local settings
+.claude/settings.local.json
+
+# Database
+*.db
+*.db-journal
+
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+.venv/
+venv/
+.Python
+
+# macOS
+.DS_Store
+
+# Logs
+*.log
+/tmp/

@@ -1,0 +1,10 @@
+fastapi==0.115.5
+uvicorn[standard]==0.32.1
+sqlalchemy==2.0.36
+requests==2.32.3
+anthropic==0.40.0
+finnhub-python==2.4.20
+apscheduler==3.10.4
+python-dotenv==1.0.1
+exchange-calendars==4.6.0
+pandas==2.2.3
