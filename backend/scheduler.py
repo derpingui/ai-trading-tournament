@@ -39,6 +39,9 @@ def _run_all_agents(triggered_by: str = "scheduler") -> None:
             elif "llama" in model_id.lower():
                 from agents.groq_agent import GroqAgent
                 agent = GroqAgent(agent_id=agent_id)
+            elif "gpt-oss" in model_id.lower():
+                from agents.openrouter_agent import OpenRouterAgent
+                agent = OpenRouterAgent(agent_id=agent_id, model_id=model_id, name="GPT")
             else:
                 logger.warning("No agent implementation for model_id '%s'", model_id)
                 continue

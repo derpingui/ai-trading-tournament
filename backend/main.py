@@ -308,6 +308,9 @@ def _run_agent_cycle(agent_id: int, model_id: str, triggered_by: str) -> dict:
     elif "llama" in model_id.lower():
         from agents.groq_agent import GroqAgent
         agent = GroqAgent(agent_id=agent_id)
+    elif "gpt-oss" in model_id.lower():
+        from agents.openrouter_agent import OpenRouterAgent
+        agent = OpenRouterAgent(agent_id=agent_id, model_id=model_id, name="GPT")
     else:
         return {"error": f"No agent implementation for model_id '{model_id}'"}
     return agent.run_cycle(triggered_by=triggered_by)

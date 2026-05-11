@@ -32,6 +32,7 @@ All trades are fictitious — no real money is ever moved. But the market data, 
 | 🟠 **Claude** | claude-sonnet-4-6 | Anthropic | Needs API key |
 | 🔵 **Gemini** | gemini-2.0-flash | Google | EU restricted (free tier) |
 | 🟢 **Llama** | llama-3.3-70b-versatile | Groq | ✅ Active |
+| 🔴 **GPT** | gpt-oss-120b | OpenRouter | ✅ Active |
 
 Each AI receives the exact same prompt at the same time: current prices, day % changes, recent financial news, and its own portfolio state. It then responds with a structured JSON decision — which stocks to buy or sell and why.
 

@@ -94,6 +94,7 @@ def _seed_agents():
         {"name": "Claude", "model_id": "claude-sonnet-4-6", "color": "#d97706"},
         {"name": "Gemini", "model_id": "gemini-2.0-flash", "color": "#4285f4"},
         {"name": "Llama", "model_id": "llama-3.3-70b-versatile", "color": "#10b981"},
+        {"name": "GPT", "model_id": "openai/gpt-oss-120b:free", "color": "#ef4444"},
     ]
     with Session(engine) as session:
         for data in agents_to_seed:
