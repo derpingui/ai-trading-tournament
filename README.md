@@ -80,6 +80,95 @@ The scheduler automatically triggers analysis cycles:
 
 ---
 
+## 🧠 How the AIs Make Decisions
+
+Every AI receives **identical information** at the same time — no AI has an advantage over another.
+
+### What Each AI Sees
+
+Each analysis cycle, every AI is given a context block like this:
+
+```
+=== MARKET SNAPSHOT ===
+SPY: +0.83% today | VIX: 18.4
+
+=== TRADEABLE UNIVERSE (prices) ===
+  AAPL:  $293.32 (+2.05%)
+  MSFT:  $415.12 (-1.34%)
+  NVDA:  $215.20 (+1.75%)
+  TSLA:  $428.35 (+4.02%)
+  GOOGL: $400.80 (+0.71%)
+  META:  $609.63 (-1.16%)
+  AMZN:  $272.68 (+0.56%)
+  JPM:   $302.10 (-1.36%)
+  V:     $318.79 (-0.78%)
+  SPY:   $737.62 (+0.83%)
+  QQQ:   $711.23 (+2.34%)
+
+=== YOUR PORTFOLIO ===
+Cash available: $5,772.84
+Equity value:   $3,226.28
+Total value:    $8,999.12
+Return:         -10.01% (started at $10,000.00)
+
+=== CURRENT POSITIONS ===
+  AAPL:  8 shares @ $293.32 | current $293.32 | P&L +$0.00
+  NVDA:  5 shares @ $215.20 | current $215.20 | P&L +$0.00
+  GOOGL: 2 shares @ $400.80 | current $400.80 | P&L +$0.00
+
+=== RECENT NEWS ===
+- [Reuters 14:21 UTC] Iran war drives oil surge. Brent crude hits $112...
+- [CNBC 13:45 UTC] Circle raises $222M from BlackRock, Apollo ahead of IPO...
+- [Reuters 13:02 UTC] Fed minutes signal rate pause as inflation cools...
+```
+
+### The System Prompt (Rules Given to Every AI)
+
+Each AI is also given a system prompt once, which defines its role and the rules of the competition:
+
+```
+You are [Claude / Gemini / Llama], an AI portfolio manager competing
+in a paper trading tournament against other AI models.
+
+RULES:
+- Starting capital: $10,000. Transaction cost: $1.00 flat per trade.
+- Max 25% of total portfolio value in any single stock.
+- No short selling. No leverage.
+- You may hold cash — sometimes doing nothing is the right call.
+- Trade only from the provided symbol universe.
+
+YOUR GOAL: Maximize total portfolio value over time.
+Think like a disciplined investor, not a gambler.
+
+RESPONSE FORMAT — always reply with valid JSON only:
+{
+  "analysis": "2-3 sentence market outlook and reasoning",
+  "trades": [
+    {
+      "symbol": "AAPL",
+      "action": "buy",
+      "quantity": 5,
+      "reasoning": "one sentence rationale"
+    }
+  ]
+}
+
+If you decide not to trade, return: {"analysis": "...", "trades": []}
+```
+
+### What Happens After
+
+1. The AI returns its JSON response
+2. The trading engine validates each trade (enough cash? position size within 25%?)
+3. If a quantity exceeds the 25% limit it's automatically clamped to the maximum allowed
+4. Each trade deducts $1.00 in transaction costs
+5. Positions, cash, and portfolio value are updated in the database
+6. The dashboard updates live via WebSocket — including the AI's written `analysis` and per-trade `reasoning`
+
+This means you can see **exactly why** each AI made every trade, in its own words, in real time.
+
+---
+
 ## 📊 Dashboard Features
 
 - **Leaderboard cards** — live portfolio value, % return, trade count per AI
