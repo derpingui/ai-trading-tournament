@@ -6,6 +6,8 @@
 <title>AI Trading Tournament</title>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.6/dist/chart.umd.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns@3.0.0/dist/chartjs-adapter-date-fns.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/hammerjs@2.0.8/hammer.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-zoom@2.0.1/dist/chartjs-plugin-zoom.min.js"></script>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
 
@@ -281,6 +283,7 @@
     display: flex;
     gap: 14px;
     flex-wrap: wrap;
+    align-items: center;
   }
 
   .legend-item {
@@ -295,6 +298,56 @@
     width: 8px; height: 8px;
     border-radius: 50%;
   }
+
+  .chart-ranges {
+    display: flex;
+    gap: 3px;
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 3px;
+    margin-left: auto;
+  }
+
+  .range-btn {
+    background: none;
+    border: none;
+    color: var(--muted);
+    font-size: 11px;
+    font-weight: 600;
+    padding: 3px 9px;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: all 0.15s;
+    letter-spacing: 0.2px;
+  }
+
+  .range-btn:hover  { color: var(--text); }
+  .range-btn.active { background: var(--surface2); color: var(--text); }
+
+  .chart-hint {
+    font-size: 10px;
+    color: var(--muted);
+    opacity: 0.5;
+    text-align: right;
+    margin-top: 6px;
+  }
+
+  .reset-zoom-btn {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    color: var(--muted);
+    font-size: 10px;
+    font-weight: 600;
+    padding: 3px 9px;
+    cursor: pointer;
+    display: none;
+    transition: all 0.15s;
+  }
+
+  .reset-zoom-btn:hover { color: var(--text); border-color: var(--border2); }
+  .reset-zoom-btn.visible { display: inline-block; }
 
   /* ── FEED PANEL ── */
   .feed-panel {
@@ -725,6 +778,26 @@
     padding: 20px 0;
   }
 
+  /* ── API WARNING BANNER ── */
+  .api-warning {
+    display: none;
+    align-items: center;
+    gap: 10px;
+    padding: 9px 28px;
+    background: rgba(251,191,36,0.08);
+    border-bottom: 1px solid rgba(251,191,36,0.2);
+    font-size: 12px;
+    color: #fbbf24;
+  }
+  .api-warning.visible { display: flex; }
+  .api-warning svg { flex-shrink: 0; }
+  .api-warning-msg { flex: 1; }
+  .api-warning-dismiss {
+    background: none; border: none; color: #fbbf24;
+    cursor: pointer; opacity: 0.6; font-size: 16px; line-height: 1; padding: 0 2px;
+  }
+  .api-warning-dismiss:hover { opacity: 1; }
+
   /* ── SPINNER ── */
   .spinner {
     width: 14px; height: 14px;
@@ -775,6 +848,15 @@
   </button>
 </header>
 
+<!-- API WARNING BANNER -->
+<div class="api-warning" id="apiWarning">
+  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>
+  </svg>
+  <span class="api-warning-msg" id="apiWarningMsg">Market data unavailable</span>
+  <button class="api-warning-dismiss" onclick="document.getElementById('apiWarning').classList.remove('visible')">×</button>
+</div>
+
 <!-- MAIN GRID -->
 <div class="main">
 
@@ -799,11 +881,20 @@
         <div class="panel-title">Portfolio Performance</div>
         <div class="panel-subtitle">Total value over time · All agents</div>
       </div>
-      <div class="chart-legend" id="chartLegend"></div>
+      <div style="display:flex;align-items:center;gap:10px">
+        <div class="chart-legend" id="chartLegend"></div>
+        <button class="reset-zoom-btn" id="resetZoomBtn" onclick="resetZoom()">↺ Reset</button>
+        <div class="chart-ranges">
+          <button class="range-btn" onclick="setRange('1d',this)">Today</button>
+          <button class="range-btn" onclick="setRange('1w',this)">1W</button>
+          <button class="range-btn active" onclick="setRange('all',this)">All</button>
+        </div>
+      </div>
     </div>
     <div class="chart-wrap">
       <canvas id="portfolioChart"></canvas>
     </div>
+    <div class="chart-hint">Scroll to zoom · Drag to pan</div>
   </div>
 
   <!-- FEED -->
@@ -959,22 +1050,24 @@ const API    = '';   // same origin — FastAPI serves both API and frontend
 const WS_URL = `ws://${location.host}/ws`;
 
 // ── State ───────────────────────────────────────────────────────────────────
-let chart      = null;
-let agents     = [];
-let activeTab  = null;
-let tradeTotal = 0;
-let ws         = null;
+let chart        = null;
+let agents       = [];
+let activeTab    = null;
+let tradeTotal   = 0;
+let ws           = null;
+let currentRange = 'all';
 
 // ── Boot ────────────────────────────────────────────────────────────────────
 async function boot() {
   await loadAgents();
   buildTabs();
   initChart();
-  await Promise.all([loadLeaderboard(), loadTrades(), loadChartData()]);
+  await Promise.all([loadLeaderboard(), loadTrades(), loadChartData(), checkApiStatus()]);
   if (activeTab) loadPositions(activeTab);
   connectWS();
   updateMarketStatus();
   setInterval(updateMarketStatus, 60000);
+  setInterval(checkApiStatus, 5 * 60 * 1000);  // re-check every 5 min
 }
 
 // ── Agents ──────────────────────────────────────────────────────────────────
@@ -1060,34 +1153,82 @@ function flashCard(agentId) {
 }
 
 // ── Chart ────────────────────────────────────────────────────────────────────
+const BASELINE_DS = {
+  label: '__baseline__',
+  data: [],  // populated dynamically from real data range
+  borderColor: 'rgba(255,255,255,0.1)',
+  borderWidth: 1,
+  borderDash: [5, 5],
+  backgroundColor: 'transparent',
+  fill: false,
+  pointRadius: 0,
+  tension: 0,
+  order: 99,
+};
+
+function makeGradient(color) {
+  return (context) => {
+    const { chart } = context;
+    const { ctx, chartArea } = chart;
+    if (!chartArea) return color + '18';
+    const g = ctx.createLinearGradient(0, chartArea.top, 0, chartArea.bottom);
+    g.addColorStop(0, color + '55');
+    g.addColorStop(0.6, color + '18');
+    g.addColorStop(1, color + '00');
+    return g;
+  };
+}
+
 function initChart() {
   const ctx = document.getElementById('portfolioChart').getContext('2d');
   chart = new Chart(ctx, {
     type: 'line',
-    data: { datasets: [] },
+    data: { datasets: [BASELINE_DS] },
     options: {
       responsive: true,
       maintainAspectRatio: false,
-      animation: { duration: 400 },
+      animation: { duration: 300 },
       interaction: { mode: 'index', intersect: false },
       plugins: {
         legend: { display: false },
         tooltip: {
-          backgroundColor: '#1a2235',
-          borderColor: 'rgba(255,255,255,0.1)',
+          backgroundColor: '#0d1220',
+          borderColor: 'rgba(255,255,255,0.12)',
           borderWidth: 1,
           titleColor: '#6b7a9a',
           bodyColor: '#f0f4ff',
-          padding: 10,
+          padding: 12,
+          cornerRadius: 8,
+          boxWidth: 8,
+          boxHeight: 8,
+          filter: item => item.dataset.label !== '__baseline__',
           callbacks: {
-            label: c => ` ${c.dataset.label}: $${c.parsed.y.toLocaleString('en-US',{minimumFractionDigits:2})}`,
+            title: items => {
+              const d = new Date(items[0].parsed.x);
+              return d.toLocaleString('en-US', { month:'short', day:'numeric', hour:'2-digit', minute:'2-digit' });
+            },
+            label: c => {
+              const v = c.parsed.y;
+              const ret = ((v - 10000) / 10000 * 100);
+              const sign = ret >= 0 ? '+' : '';
+              return ` ${c.dataset.label}: $${v.toLocaleString('en-US',{minimumFractionDigits:2})}  (${sign}${ret.toFixed(2)}%)`;
+            },
+          },
+        },
+        zoom: {
+          pan: { enabled: true, mode: 'x', onPan: () => showResetBtn(true) },
+          zoom: {
+            wheel: { enabled: true },
+            pinch: { enabled: true },
+            mode: 'x',
+            onZoom: () => showResetBtn(true),
           },
         },
       },
       scales: {
         x: {
           type: 'time',
-          time: { unit: 'minute', displayFormats: { minute:'HH:mm', hour:'HH:mm', day:'MMM d' } },
+          time: { displayFormats: { minute:'HH:mm', hour:'HH:mm', day:'MMM d' } },
           ticks: { color:'#6b7a9a', maxTicksLimit: 8, font:{ size:11 } },
           grid:  { color:'rgba(255,255,255,0.04)' },
           border: { color:'rgba(255,255,255,0.06)' },
@@ -1105,23 +1246,67 @@ function initChart() {
   });
 }
 
+function setRange(range, btn) {
+  currentRange = range;
+  document.querySelectorAll('.range-btn').forEach(b => b.classList.remove('active'));
+  if (btn) btn.classList.add('active');
+  if (!chart) return;
+  const now = Date.now();
+  if (range === '1d') {
+    chart.options.scales.x.min = now - 24 * 60 * 60 * 1000;
+    chart.options.scales.x.max = now;
+  } else if (range === '1w') {
+    chart.options.scales.x.min = now - 7 * 24 * 60 * 60 * 1000;
+    chart.options.scales.x.max = now;
+  } else {
+    chart.options.scales.x.min = undefined;
+    chart.options.scales.x.max = undefined;
+  }
+  chart.resetZoom();
+  chart.update('none');
+  showResetBtn(false);
+}
+
+function resetZoom() {
+  if (!chart) return;
+  chart.resetZoom();
+  showResetBtn(false);
+}
+
+function showResetBtn(show) {
+  const btn = document.getElementById('resetZoomBtn');
+  if (!btn) return;
+  if (show) btn.classList.add('visible');
+  else btn.classList.remove('visible');
+}
+
 async function loadChartData() {
   const data = await get('/chart').catch(() => ({}));
   const legend = document.getElementById('chartLegend');
   legend.innerHTML = '';
 
-  const datasets = [];
+  // Build baseline spanning actual data range
+  let allTs = [];
+  for (const info of Object.values(data)) {
+    if (info.data.length) allTs.push(...info.data.map(d => new Date(d.timestamp).getTime()));
+  }
+  if (allTs.length) {
+    BASELINE_DS.data = [{ x: new Date(Math.min(...allTs) - 60000), y: 10000 }, { x: new Date(Date.now() + 60000), y: 10000 }];
+  }
+
+  const datasets = [BASELINE_DS];
   for (const [name, info] of Object.entries(data)) {
     if (!info.data.length) continue;
     datasets.push({
       label: name,
       data: info.data.map(d => ({ x: new Date(d.timestamp), y: d.value })),
       borderColor: info.color,
-      backgroundColor: info.color + '18',
+      backgroundColor: makeGradient(info.color),
       fill: true,
-      borderWidth: 2,
+      borderWidth: 2.5,
       pointRadius: 0,
-      pointHoverRadius: 4,
+      pointHoverRadius: 5,
+      pointHoverBackgroundColor: info.color,
       tension: 0.4,
     });
     legend.innerHTML += `
@@ -1141,11 +1326,15 @@ function addChartPoint(name, color, ts, value) {
       label: name,
       data: [],
       borderColor: color,
-      backgroundColor: color + '18',
-      fill: true, borderWidth: 2, pointRadius: 0, pointHoverRadius: 4, tension: 0.4,
+      backgroundColor: makeGradient(color),
+      fill: true,
+      borderWidth: 2.5,
+      pointRadius: 0,
+      pointHoverRadius: 5,
+      pointHoverBackgroundColor: color,
+      tension: 0.4,
     };
     chart.data.datasets.push(ds);
-    // update legend
     const legend = document.getElementById('chartLegend');
     legend.innerHTML += `<div class="legend-item"><div class="legend-dot" style="background:${color}"></div>${name}</div>`;
   }
@@ -1270,6 +1459,7 @@ function connectWS() {
     let msg; try { msg = JSON.parse(data); } catch { return; }
     if (msg.type === 'init') {
       renderCards(msg.leaderboard);
+      if (msg.api_status) applyApiStatus({ market_data: msg.api_status });
     } else if (msg.type === 'trade_executed') {
       appendTrade(msg.trade);
       addChartPoint(msg.agent_name, msg.agent_color, msg.trade.timestamp, msg.portfolio_value);
@@ -1298,6 +1488,41 @@ async function triggerAll() {
     btn.innerHTML = `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"/></svg> Run Analysis`;
     loadPositions(activeTab);
   }, 3000);
+}
+
+// ── API Status ───────────────────────────────────────────────────────────────
+async function checkApiStatus() {
+  const status = await get('/status').catch(() => null);
+  if (!status) return;
+  applyApiStatus(status);
+}
+
+function applyApiStatus(status) {
+  const banner = document.getElementById('apiWarning');
+  const msg    = document.getElementById('apiWarningMsg');
+  const market = status.market_data;
+  const news   = status.news;
+
+  const issues = [];
+  if (market && !market.ok) {
+    const raw = market.error || 'Unknown error';
+    // Friendly message for the most common case
+    if (raw.includes('run out of API credits') || (market.code === 429)) {
+      issues.push('Market data: Twelve Data daily credit limit reached — prices may be stale until tomorrow.');
+    } else {
+      issues.push('Market data: ' + raw.slice(0, 120));
+    }
+  }
+  if (news && !news.ok) {
+    issues.push('News feed: ' + (news.error || 'unavailable').slice(0, 80));
+  }
+
+  if (issues.length) {
+    msg.textContent = issues.join('  ·  ');
+    banner.classList.add('visible');
+  } else {
+    banner.classList.remove('visible');
+  }
 }
 
 // ── Helpers ──────────────────────────────────────────────────────────────────

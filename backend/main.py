@@ -278,15 +278,37 @@ async def list_agents():
         ]
 
 
+@app.get("/status")
+async def api_status():
+    """Returns health of external API dependencies."""
+    from market_data import get_api_status
+    from news import get_market_news
+    market = get_api_status()
+    # Quick news probe (cached — doesn't burn credits)
+    try:
+        articles = get_market_news(limit=1)
+        news_ok = len(articles) > 0
+        news_error = None
+    except Exception as e:
+        news_ok = False
+        news_error = str(e)
+    return {
+        "market_data": market,
+        "news": {"ok": news_ok, "error": news_error},
+    }
+
+
 # --- WebSocket ---
 
 @app.websocket("/ws")
 async def websocket_endpoint(ws: WebSocket):
     await manager.connect(ws)
     # Send initial state on connect
+    from market_data import get_api_status
     await ws.send_text(json.dumps({
         "type": "init",
         "leaderboard": get_leaderboard(),
+        "api_status": get_api_status(),
     }))
     try:
         while True:

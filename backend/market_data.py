@@ -23,21 +23,34 @@ DEFAULT_SYMBOLS = [
 _session = requests.Session()
 _session.headers.update({"User-Agent": "AI-Trading-Tournament/1.0"})
 
+# Module-level API status — updated on every call
+_api_status: dict = {"ok": True, "error": None, "code": None}
+
+
+def get_api_status() -> dict:
+    return dict(_api_status)
+
 
 def _api_key() -> str:
     return os.getenv("TWELVE_DATA_API_KEY", "demo")
 
 
 def _get(endpoint: str, params: dict) -> dict | None:
+    global _api_status
     params["apikey"] = _api_key()
     try:
         r = _session.get(f"{BASE_URL}/{endpoint}", params=params, timeout=10)
         r.raise_for_status()
         data = r.json()
         if isinstance(data, dict) and data.get("status") == "error":
+            code = data.get("code")
+            msg = data.get("message", "Unknown error from Twelve Data")
+            _api_status = {"ok": False, "error": msg, "code": code}
             return None
+        _api_status = {"ok": True, "error": None, "code": None}
         return data
-    except Exception:
+    except Exception as e:
+        _api_status = {"ok": False, "error": str(e), "code": None}
         return None
 
 
